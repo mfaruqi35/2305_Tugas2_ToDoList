@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 })
 
 let tasks = [];
+let idx = 0;
 
 const saveTasks = ()=> {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -21,6 +22,7 @@ const addTask = ()=> {
     if(text){
         tasks.push({text:text, completed: false});
         taskInput.value = "";
+        idx += 1; 
         updateTasksList();
         updateStats();
         saveTasks();
@@ -36,6 +38,7 @@ const toggleTaskComplete = (index) =>{
 
 const deleteTask = (index) => {
     tasks.splice(index,1);
+    idx -= 1;
     updateTasksList();
     updateStats();
     saveTasks();
@@ -53,10 +56,12 @@ const editTask = (index)=> {
 
 const updateStats = ()=>{
     const completedTasks = tasks.filter(task=> task.completed).length
-    const totalTasks = tasks.length;
+    const totalTasks = idx;
     const progress = (completedTasks/totalTasks)*100;
     const progressBar = document.getElementById('progress')
-
+    if(idx === 0){
+        progressBar.style.width = `0%`;
+    }
     progressBar.style.width = `${progress}%`;
 
     document.getElementById('numbers').innerText = `${completedTasks} / ${totalTasks}`;
