@@ -1,85 +1,106 @@
-document.addEventListener("DOMContentLoaded", ()=>{
-    const storedTasks = JSON.parse(localStorage.getItem('tasks'))
+document.addEventListener("DOMContentLoaded", () => {
+    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+    const storedProgress = JSON.parse(localStorage.getItem("progress"));
 
-    if(storedTasks){
-        storedTasks.forEach((task)=> tasks.push(task))
-        updateTasksList();
-        updateStats();
+    if (storedTasks) {
+        tasks = storedTasks; // Load stored tasks
     }
-})
+
+    if (storedProgress) {
+        completedTasks = storedProgress.completedTasks;
+        totalTasks = storedProgress.totalTasks;
+    } else {
+        completedTasks = 0;
+        totalTasks = 0;
+    }
+
+    updateTasksList();
+    updateStats();
+});
 
 let tasks = [];
-let idx = 0;
+let completedTasks = 0;
+let totalTasks = 0;
 
-const saveTasks = ()=> {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+const saveTasks = () => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
-const addTask = ()=> {
-    const taskInput = document.getElementById('taskInput');
-    const text = taskInput.value.trim()
+const saveProgress = () => {
+    localStorage.setItem("progress", JSON.stringify({ completedTasks, totalTasks }));
+};
 
-    if(text){
-        tasks.push({text:text, completed: false});
+const addTask = () => {
+    const taskInput = document.getElementById("taskInput");
+    const text = taskInput.value.trim();
+
+    if (text) {
+        tasks.push({ text: text, completed: false });
         taskInput.value = "";
-        idx += 1; 
+        totalTasks += 1;
         updateTasksList();
         updateStats();
         saveTasks();
+        saveProgress();
     }
 };
 
-const toggleTaskComplete = (index) =>{
+const toggleTaskComplete = (index) => {
     tasks[index].completed = !tasks[index].completed;
+    completedTasks = tasks.filter((task) => task.completed).length; 
+
     updateTasksList();
     updateStats();
     saveTasks();
+    saveProgress();
 };
 
 const deleteTask = (index) => {
-    tasks.splice(index,1);
-    idx -= 1;
-    updateTasksList();
-    updateStats();
-    saveTasks();
-};
-
-const editTask = (index)=> {
-    const taskInput = document.getElementById('taskInput');
-    taskInput.value = tasks[index].text
-
-    tasks.splice(index,1);
-    updateTasksList();
-    updateStats();
-    saveTasks();
-};
-
-const updateStats = ()=>{
-    const completedTasks = tasks.filter(task=> task.completed).length
-    const totalTasks = idx;
-    const progress = (completedTasks/totalTasks)*100;
-    const progressBar = document.getElementById('progress')
-    if(idx === 0){
-        progressBar.style.width = `0%`;
+    if (tasks[index].completed) {
+        completedTasks -= 1; 
     }
-    progressBar.style.width = `${progress}%`;
+    tasks.splice(index, 1);
+    totalTasks = tasks.length;
 
-    document.getElementById('numbers').innerText = `${completedTasks} / ${totalTasks}`;
-}
+    updateTasksList();
+    updateStats();
+    saveTasks();
+    saveProgress();
+};
 
-const updateTasksList = ()=> {
-    const taskList = document.getElementById('task-list');
+const editTask = (index) => {
+    const taskInput = document.getElementById("taskInput");
+    taskInput.value = tasks[index].text;
+
+    deleteTask(index);
+};
+
+const updateStats = () => {
+    const progress = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
+
+    const circle = document.querySelector(".progress-circle");
+    if (circle) {
+        const radius = circle.r.baseVal.value;
+        const circumference = 2 * Math.PI * radius;
+        
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
+    }
+
+    document.getElementById("numbers").innerText = `${completedTasks} / ${totalTasks}`;
+};
+
+const updateTasksList = () => {
+    const taskList = document.getElementById("task-list");
     taskList.innerHTML = "";
 
     tasks.forEach((task, index) => {
-        const listItem = document.createElement('li');
+        const listItem = document.createElement("li");
 
         listItem.innerHTML = `
         <div class="task-item">
-             <div class="task ${task.completed ? "completed" : ""}">
-                <input type="checkbox" class="checkbox" 
-                ${task.completed?"checked" : ""
-                }/>
+            <div class="task ${task.completed ? "completed" : ""}">
+                <input type="checkbox" class="checkbox" ${task.completed ? "checked" : ""} onChange="toggleTaskComplete(${index})"/>
                 <p>${task.text}</p>
             </div>
             <div class="icons">
@@ -89,13 +110,11 @@ const updateTasksList = ()=> {
         </div>
         `;
 
-        listItem.addEventListener('change', ()=> toggleTaskComplete(index));
         taskList.append(listItem);
     });
 };
 
-document.getElementById('newTask').addEventListener('click', function(e){
+document.getElementById("newTask").addEventListener("click", function (e) {
     e.preventDefault();
-
     addTask();
 });
