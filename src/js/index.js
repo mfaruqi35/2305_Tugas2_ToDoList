@@ -22,6 +22,8 @@ let tasks = [];
 let completedTasks = 0;
 let totalTasks = 0;
 
+const emptyImage = document.getElementById("emptyImage");
+
 const saveTasks = () => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
 };
@@ -112,6 +114,26 @@ const updateTasksList = () => {
 
         taskList.append(listItem);
     });
+
+    if (tasks.length === 0) {
+        if (!document.getElementById("emptyImage")) {
+            const emptyImage = document.createElement("img");
+            emptyImage.id = "emptyImage";
+            emptyImage.src = "./src/assets/emptytask.png";
+            emptyImage.alt = "No tasks yet";
+            emptyImage.style.width = "65%"; // Sesuaikan ukuran
+            emptyImage.style.display = "block";
+            emptyImage.style.margin = "1% auto";
+            emptyImage.style.opacity = "0.25";
+            taskList.append(emptyImage);
+        }
+    } else {
+        // **Hapus gambar jika ada tugas**
+        const emptyImage = document.getElementById("emptyImage");
+        if (emptyImage) {
+            emptyImage.remove();
+        }
+    }
 };
 
 document.getElementById("newTask").addEventListener("click", function (e) {
